@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy import select, insert, ScalarResult
 
-
+from app.core.models import Recipe, RecipeIngredient
 from app.schemas.diary import DiaryEntryCreate
 from app.core.security import PasswordHelper
 from app.core.models.diary import DiaryEntry
@@ -37,11 +37,16 @@ async def get_user_diary_for_date(session: AsyncSession, user_id: int, diary_dat
         select(DiaryEntry)
         .where(DiaryEntry.user_id == user_id)
         .where(DiaryEntry.date == diary_date)
-        .options(joinedload(DiaryEntry.product))
+        .options(
+            joinedload(DiaryEntry.product),
+            joinedload(DiaryEntry.recipe)
+            .joinedload(Recipe.recipe_ingredients)
+            .joinedload(RecipeIngredient.product)
+        )
     )
 
     result = await session.execute(query)
-    return result.scalars().all()
+    return result.scalars().unique().all()
 
 async def delete_diary_entry(session: AsyncSession, diary_obj: DiaryEntry) -> None:
     """Принимает готовый объект и удаляет его"""

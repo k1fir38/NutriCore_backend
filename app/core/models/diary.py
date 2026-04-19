@@ -25,8 +25,8 @@ class DiaryEntry(Base):
     date: Mapped[date] = mapped_column(DATE, nullable=False, index=True)
     meal_type: Mapped[MealType] = mapped_column(String, nullable=False)
 
-    recipe_id: Mapped[Optional[int]] = mapped_column(ForeignKey("recipes.id"), nullable=True)
-    product_id: Mapped[Optional[int]] = mapped_column(ForeignKey("products.id"), nullable=True)
+    recipe_id: Mapped[Optional[int]] = mapped_column(ForeignKey("recipes.id", ondelete="CASCADE"), nullable=True)
+    product_id: Mapped[Optional[int]] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), nullable=True)
     weight_grams: Mapped[float] = mapped_column(Float, nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="diary_entries")
@@ -44,22 +44,30 @@ class DiaryEntry(Base):
     def proteins_total(self) -> float:
         if self.product:
             return calculate_macro_by_weight(self.product.proteins, self.weight_grams)
+        if self.recipe:
+            return self.recipe.total_proteins
         return 0.0
 
     @property
     def fats_total(self) -> float:
         if self.product:
             return calculate_macro_by_weight(self.product.fats, self.weight_grams)
+        if self.recipe:
+            return self.recipe.total_fats
         return 0.0
 
     @property
     def carbs_total(self) -> float:
         if self.product:
             return calculate_macro_by_weight(self.product.carbs, self.weight_grams)
+        if self.recipe:
+            return self.recipe.total_carbs
         return 0.0
 
     @property
     def calories_total(self) -> float:
         if self.product:
             return (self.product.calories / 100) * self.weight_grams
+        if self.recipe:
+            return self.recipe.total_calories
         return 0.0

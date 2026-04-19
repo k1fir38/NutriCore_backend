@@ -1,5 +1,6 @@
+from datetime import timedelta
 
-from fastapi import APIRouter, HTTPException, Depends, Response
+from fastapi import APIRouter, HTTPException, Depends, Response, Cookie
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -49,14 +50,57 @@ async def login(
             hashed_password=user.hashed_password
     ):
         raise HTTPException(
-            status_code=401,
-            detail="User not unauthorized"
+            status_code=404,
+            detail="User not found"
         )
 
+    access_token = PasswordHelper.create_access_token(
+        {
+            "sub": str(user.id),
+            "type": "access"
+        }
+    )
+    refresh_token = PasswordHelper.create_access_token(
+        {
+            "sub": str(user.id),
+            "type": "refresh"
+        },
+        expires_delta=timedelta(days=7)
+    )
 
-    access_token = PasswordHelper.create_access_token({"sub": str(user.id)})
-
-    response.set_cookie("access_token", access_token, httponly=True)
-
+    response.set_cookie("access_token", access_token, httponly=True, max_age=1800)
+    response.set_cookie("refresh_token", refresh_token, httponly=True, max_age=3600*24*7)
     return user
 
+@router.post("/refresh")
+async def process_refresh_token(
+        response: Response,
+        refresh_token: str | None = Cookie(None)
+):
+
+    payload = PasswordHelper.decode_token(refresh_token)
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Refresh token required")
+
+    user_id = payload.get("sub")
+
+    access_token = PasswordHelper.create_access_token(
+        {
+            "sub": str(user_id),
+            "type": "access"
+        }
+    )
+
+    response.set_cookie("access_token", access_token, httponly=True, max_age=1800)
+
+    return {"detail": "Refresh successful"}
+
+
+@router.post("/logout")
+async def logout(
+        response: Response,
+):
+    response.delete_cookie("access_token", httponly=True)
+    response.delete_cookie("refresh_token", httponly=True)
+
+    return {"detail": "Successfully logged out"}
