@@ -21,7 +21,7 @@ class Recipe(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
-    instructions: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default=Null)
+    instructions: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
 
     creator: Mapped["User"] = relationship(back_populates="recipes")

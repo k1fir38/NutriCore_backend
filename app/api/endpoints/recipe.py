@@ -60,3 +60,21 @@ async def delete_recipes(
         )
 
     await delete_recipe(session=session,recipe_obj=recipe)
+
+@router.post("/{recipe_id}", response_model=RecipeRead)
+async def create_new_recipe(
+        recipe_id: int,
+        current_user=Depends(get_current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+    recipe = await find_recipes_by_id(
+        recipe_id=recipe_id,
+        user_id=current_user.id,
+        session=session
+    )
+    if recipe is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Recipe not found"
+        )
+    return recipe
