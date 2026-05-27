@@ -12,6 +12,10 @@ from app.api.endpoints.weight import router as router_weidht
 
 app = FastAPI()
 
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "NutriCore backend is running"}
+
 app.include_router(router=router_products)
 app.include_router(router=router_auth)
 app.include_router(router=router_users)
