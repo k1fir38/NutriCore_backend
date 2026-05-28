@@ -74,7 +74,7 @@ async def create_product(
 
     return new_product
 
-@router.get("/me", response_model=ProductRead)
+@router.get("/me", response_model=list[ProductRead])
 async def get_me_product(
         current_user = Depends(get_current_user),
         session: AsyncSession = Depends(get_async_session)
