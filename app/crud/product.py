@@ -93,10 +93,13 @@ async def delete_custom_product(
         await session.commit()
 
 
-async def find_custom_product(session: AsyncSession, user_id: int) -> Sequence[Product]:
-
+async def find_custom_product(
+    session: AsyncSession,
+    user_id: int
+) -> Sequence[Product]:
     query = (
-        select(Product).where(User.id == user_id)
+        select(Product)
+        .where(Product.creator_id == user_id)
     )
 
     result = await session.execute(query)
