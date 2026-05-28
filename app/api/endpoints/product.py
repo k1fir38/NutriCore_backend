@@ -13,6 +13,7 @@ from app.crud.product import (
         create_custom_product,
         find_by_id_product,
         delete_custom_product,
+        find_custom_product,
 
     )
 
@@ -72,6 +73,28 @@ async def create_product(
         )
 
     return new_product
+
+@router.get("/me", response_model=ProductRead)
+async def get_me_product(
+        current_user = Depends(get_current_user),
+        session: AsyncSession = Depends(get_async_session)
+):
+
+    user_id = current_user.id
+
+    me_product = await find_custom_product(
+        session=session,
+        user_id=user_id
+    )
+
+    if not me_product:
+        raise HTTPException(
+            status_code=400,
+            detail="Bad request"
+        )
+
+    return me_product
+
 
 
 @router.delete("/me/{product_id}", status_code=status.HTTP_204_NO_CONTENT)

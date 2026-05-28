@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from sqlalchemy import select, insert, ScalarResult, func, text, or_, and_
 
+from app.core.models import User
 from app.core.models.product import Product
 from app.schemas.product import ProductCreate
 
@@ -90,3 +91,14 @@ async def delete_custom_product(
 ) -> None:
         await session.delete(product_obj)
         await session.commit()
+
+
+async def find_custom_product(session: AsyncSession, user_id: int) -> Sequence[Product]:
+
+    query = (
+        select(Product).where(User.id == user_id)
+    )
+
+    result = await session.execute(query)
+
+    return result.scalars().all()
